@@ -44,28 +44,28 @@ on:
         - vendorboot
         
 jobs:
-   build:
-     - name: Checkout
-       uses: actions/checkout@v4
+  build:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-     - name: Clean-up
-       uses: rokibhasansagar/slimhub_actions@main
+    - name: Clean-up
+      uses: rokibhasansagar/slimhub_actions@main
 
-     - name: Swap Space
-       uses: pierotofy/set-swap-space@master
-       with:
+    - name: Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
             swap-size-gb: 24
 
-     - name: Build Environment
-       run: |
+    - name: Build Environment
+      run: |
          sudo apt install aria2 -y
          git clone https://gitlab.com/OrangeFox/misc/scripts.git -b master
          cd scripts
          sudo bash setup/android_build_env.sh
 
-     - name: Set-up Manifest
-       if: inputs.MANIFEST_BRANCH == '11.0' || inputs.MANIFEST_BRANCH == '12.1'
-       run: |
+    - name: Set-up Manifest
+      if: inputs.MANIFEST_BRANCH == '11.0' || inputs.MANIFEST_BRANCH == '12.1'
+      run: |
          mkdir -p ${GITHUB_WORKSPACE}/OrangeFox
          cd ${GITHUB_WORKSPACE}/OrangeFox
          git config --global user.name "${{ github.actor }}"
@@ -74,15 +74,15 @@ jobs:
          cd sync
          ./orangefox_sync.sh --branch ${{ inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
 
-     - name: Clone Device Tree
-       run: |
+    - name: Clone Device Tree
+      run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
         git clone ${{ inputs.DEVICE_TREE }} -b ${{ inputs.DEVICE_TREE_BRANCH }} ./device/nothing/Spacewar
         cd ./device/nothing/Spacewar
         echo "COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_ENV
 
-     - name: Clone Kernel Source
-       run: |
+    - name: Clone Kernel Source
+      run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/device/nothing/Spacewar
         git submodule add -b sm7325/s https://github.com/NothingOSS/android_kernel_msm-5.4_nothing_sm7325 kernel/nothing/sm7325
         git submodule update --init --recursive
@@ -91,8 +91,8 @@ jobs:
         echo "KERNEL_COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_ENV
         cd ../../..
 
-     - name: Building OrangeFox
-       run: |
+    - name: Building OrangeFox
+      run: |
         cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/device/nothing/Spacewar
         set +e
         source build/envsetup.sh
@@ -100,20 +100,20 @@ jobs:
         set -e
         lunch twrp_${{ inputs.DEVICE_NAME }}-eng && make clean && mka adbd ${{ inputs.BUILD_TARGET }}image
 
-     - name: Set Release Properties
-       run: |
+    - name: Set Release Properties
+      run: |
          echo "BUILD_DATE=$(TZ=Asia/Manila date +%Y%m%d)" >> $GITHUB_ENV
          cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
 
-     - name: Upload to Release
-       uses: softprops/action-gh-release@v2
-       with:
-         files: |
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
           OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/OrangeFox*.img
           OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/OrangeFox*.zip
-         name: OrangeFox Recovery for ${{ inputs.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
-         tag_name: ${{ github.run_id }}
-         body: |
+          name: OrangeFox Recovery for ${{ inputs.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
+        tag_name: ${{ github.run_id }}
+        body: |
            ## OrangeFox Recovery Build - Unofficial
            Build: fox_${{ inputs.MANIFEST_BRANCH }}
            Device: [Device Tree/Branch](${{ inputs.DEVICE_TREE }}/tree/${{ inputs.DEVICE_TREE_BRANCH }})
