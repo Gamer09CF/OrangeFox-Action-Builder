@@ -42,7 +42,7 @@ on:
         - boot
         - recovery
         - vendorboot
-
+        
 jobs:
   build:
     name: Build OFR by ${{ github.actor }}
