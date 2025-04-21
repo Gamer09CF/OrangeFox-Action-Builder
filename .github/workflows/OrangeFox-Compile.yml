@@ -44,7 +44,7 @@ on:
         - vendorboot
         
 jobs:
-  build:
+   build:
        - name: Checkout
          uses: actions/checkout@v4
 
